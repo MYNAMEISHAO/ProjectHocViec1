@@ -14,8 +14,8 @@ public class Player : Character
     private bool isDead = false;
 
     private float horizontal;
-
     public int coinCount = 0;
+    public int shieldCount = 0;
 
     [SerializeField] private Kunai KunaiPrefab;
     [SerializeField] private Transform throwPoint;
@@ -26,6 +26,7 @@ public class Player : Character
     private void Awake()
     {
         coinCount = PlayerPrefs.GetInt("CoinCount", 0);
+        shieldCount = PlayerPrefs.GetInt("ShieldCount", 0);
 
     }
     void Update()
@@ -165,6 +166,49 @@ public class Player : Character
         this.horizontal = horizontal;
     }
 
+    public void AddShield(int count)
+    {
+        if (SpendCoin(5))
+        {
+            shieldCount += count;
+            PlayerPrefs.SetInt("ShieldCount", shieldCount);
+            UIManager.instance.SetShield(shieldCount);
+        }
+
+    }
+
+    public void AddHP(float hp)
+    {
+        if (SpendCoin(10))
+        {
+
+            hp += hp;
+            base.OnHit(-hp);
+        }
+    }
+    public bool SpendCoin(int coin)
+    {
+        if (coinCount < coin) return false;
+        else
+        {
+            coinCount -= coin;
+            PlayerPrefs.SetInt("CoinCount", coinCount);
+            UIManager.instance.SetCoin(coinCount);
+            return true;
+        }
+        
+    }
+    public override void OnHit(float damage)
+    {
+        if (shieldCount > 0)
+        {
+            shieldCount--;
+           
+            UIManager.instance.SetShield(shieldCount);
+            return;
+        }
+        base.OnHit(damage);
+    }
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.tag == "Coin")

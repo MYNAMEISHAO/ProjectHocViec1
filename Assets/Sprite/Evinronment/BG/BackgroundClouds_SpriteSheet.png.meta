@@ -197,7 +197,10 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      BackgroundClouds_SpriteSheet_0: 4288471530452270842
+      BackgroundClouds_SpriteSheet_1: -4483396960600307449
+      BackgroundClouds_SpriteSheet_2: -8995116287923530590
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -7,7 +7,7 @@ public class CombatText : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public void OnInit(float damage)
     {
-        hpText.text = damage.ToString();
+        hpText.text = (-damage).ToString();
         Invoke(nameof(OnDestroy), 1f);
     }
 

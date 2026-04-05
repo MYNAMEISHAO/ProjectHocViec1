@@ -42,7 +42,7 @@ public class Character : MonoBehaviour
 
     }
 
-    public void OnHit(float damage)
+    public virtual void OnHit(float damage)
     {
         Debug.Log($"{gameObject.name} hit with {damage} damage , current hp" + hp);
         if (!isDeath) 
@@ -54,7 +54,6 @@ public class Character : MonoBehaviour
                 hp = 0;
                 OnDeath();
             }
-
             healthBar.SetNewHp(hp);
         }
     }
