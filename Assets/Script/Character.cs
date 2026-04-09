@@ -28,7 +28,7 @@ public class Character : MonoBehaviour
     protected virtual void OnDeath()
     {
         ChangeAnim("Death");
-        Debug.Log($"{gameObject.name} died");
+        gameObject.GetComponent<Rigidbody2D>().linearVelocity = Vector2.zero;
         Invoke(nameof(OnDespawn), 2f);
     }
     protected void ChangeAnim(string animName)
@@ -44,7 +44,6 @@ public class Character : MonoBehaviour
 
     public virtual void OnHit(float damage)
     {
-        Debug.Log($"{gameObject.name} hit with {damage} damage , current hp" + hp);
         if (!isDeath) 
         {
             hp -= damage;

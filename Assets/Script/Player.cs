@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 public class Player : Character
@@ -7,15 +7,18 @@ public class Player : Character
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private float moveSpeed;
     [SerializeField] private float jumpForce;
+    [SerializeField] private CapsuleCollider2D coll;
 
     private bool isGrounded;
     private bool isJumping;
     private bool isAttack;
     private bool isDead = false;
+    private bool canCheckGrounded = true;
 
     private float horizontal;
     public int coinCount = 0;
     public int shieldCount = 0;
+    public int kunaiCount = 0;
 
     [SerializeField] private Kunai KunaiPrefab;
     [SerializeField] private Transform throwPoint;
@@ -27,6 +30,10 @@ public class Player : Character
     {
         coinCount = PlayerPrefs.GetInt("CoinCount", 0);
         shieldCount = PlayerPrefs.GetInt("ShieldCount", 0);
+        kunaiCount = PlayerPrefs.GetInt("KunaiCount", 0);
+            UIManager.instance.SetCoin(coinCount);
+            UIManager.instance.SetShield(shieldCount);
+            UIManager.instance.SetKunai(kunaiCount);
 
     }
     void Update()
@@ -45,13 +52,17 @@ public class Player : Character
         }
         if (isGrounded)
         {
+            if (isJumping)
+            {
+                Debug.Log("Loi day");
+            }
             //jump
             if (Input.GetKeyDown(KeyCode.Space) && !isJumping)
             {
                 Jump();
             }
             //throw
-            if (Input.GetKeyDown(KeyCode.K))
+            if (Input.GetKeyDown(KeyCode.K) && kunaiCount>0)
             {
                 Throw();
                 return;
@@ -63,7 +74,7 @@ public class Player : Character
                 return;
             }
             //run
-            if (Mathf.Abs(horizontal) > 0.1f)
+            if (Mathf.Abs(horizontal) > 0.1f && !isJumping)
             {
                 ChangeAnim("Run");
             }
@@ -72,6 +83,7 @@ public class Player : Character
                 ChangeAnim("Idle");
                 rb.linearVelocity = Vector2.zero;
             }
+            
         }
         if (!isGrounded && rb.linearVelocity.y < 0)
         {
@@ -113,9 +125,14 @@ public class Player : Character
     }
     private bool CheckGrounded()
     {
-        Debug.DrawLine(transform.position, transform.position +  Vector3.down * 1.1f, Color.red);
-        RaycastHit2D raycastHit2D = Physics2D.Raycast(transform.position, Vector2.down, 1.1f, groundLayer);
+        if (!canCheckGrounded) return false;
+        RaycastHit2D raycastHit2D = Physics2D.CapsuleCast(coll.bounds.center, new Vector2(coll.bounds.size.x * 0.65f, coll.bounds.size.y), 
+            CapsuleDirection2D.Vertical, 0, Vector2.down, 0.05f, groundLayer);
         return raycastHit2D.collider != null;
+    }
+    private void EnableGroundedCheck()
+    {
+        canCheckGrounded = true;
     }
     private void ResetAttack()
     {
@@ -136,15 +153,19 @@ public class Player : Character
         isAttack = true;
         rb.linearVelocity = Vector2.zero;
         ChangeAnim("Throw");
+        kunaiCount--;
+        PlayerPrefs.SetInt("KunaiCount", kunaiCount);
+        UIManager.instance.SetKunai(kunaiCount);
         Invoke(nameof(ResetAttack), 0.5f);
-
         Instantiate(KunaiPrefab, throwPoint.position, transform.rotation);
     }
     public void Jump()
     {
         isJumping = true;
+        canCheckGrounded = false;
         ChangeAnim("Jump");
         rb.AddForce(Vector2.up * jumpForce);
+        Invoke(nameof(EnableGroundedCheck), 0.2f);
     }
     public void SavePoint()
     {
@@ -186,6 +207,15 @@ public class Player : Character
             base.OnHit(-hp);
         }
     }
+    public void AddKunai(int count)
+    {
+        if (SpendCoin(1))
+        {
+            kunaiCount += count;
+            PlayerPrefs.SetInt("KunaiCount", kunaiCount);
+            UIManager.instance.SetKunai(kunaiCount);
+        }
+    }
     public bool SpendCoin(int coin)
     {
         if (coinCount < coin) return false;
@@ -203,7 +233,7 @@ public class Player : Character
         if (shieldCount > 0)
         {
             shieldCount--;
-           
+            PlayerPrefs.SetInt("ShieldCount", shieldCount);
             UIManager.instance.SetShield(shieldCount);
             return;
         }

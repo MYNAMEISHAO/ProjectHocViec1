@@ -8,6 +8,8 @@ TagManager:
   - Death
   - EnemyWall
   - Enemy
+  - Cliff
+  - Ground
   layers:
   - Default
   - TransparentFX

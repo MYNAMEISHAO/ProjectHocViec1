@@ -1,15 +1,17 @@
 using System;
+using System.Collections;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class Enemy : Character
 {
-
     [SerializeField] private float attackRange;
     [SerializeField] private float moveSpeed;
     [SerializeField] private Rigidbody2D rb;
     private IState currentState;
 
     private bool isRight = true;
+    private bool isAttack = false;
 
     private Character target;
     public Character Target => target;
@@ -40,12 +42,21 @@ public class Enemy : Character
 
     protected override void OnDeath()
     {
+        DeactiveSightArea();
         ChangeState(null);
         Debug.Log("Enemy died");
-        DeactiveSightArea();
         base.OnDeath();
     }
 
+    public override void OnHit(float damage)
+    {
+        if(isDeath)
+        {
+            return;
+        }
+        StartCoroutine(WaitToSetTarget(FindFirstObjectByType<Player>()));
+        base.OnHit(damage);
+    }
 
     public void ChangeState(IState newState)
     {
@@ -54,7 +65,7 @@ public class Enemy : Character
             currentState.OnExit(this);
         }
         currentState = newState;
-        if(currentState != null)
+        if (currentState != null)
         {
             currentState.OnEnter(this);
         }
@@ -74,23 +85,37 @@ public class Enemy : Character
 
     public void Attack()
     {
+        if (isAttack || isDeath)
+        {
+            return;
+        }
+        isAttack = true;
         ChangeAnim("Attack");
         ActiveAttackArea();
-        Invoke(nameof(DeactiveAttackArea), 0.5f);
+        Invoke(nameof(DeactiveAttackArea), 0.1f);
+        Invoke(nameof(ResetAttack), 1.5f);
     }
 
     public void Throw()
     {
 
     }
+
+    private void ResetAttack()
+    {
+        isAttack = false;
+    }
     public void ChangeDirection(bool isRight)
     {
         this.isRight = isRight;
         transform.rotation = isRight ? Quaternion.Euler(0, 0, 0) : Quaternion.Euler(0, 180, 0);
     }
-
     internal void SetTarget(Character character)
     {
+        if(isDeath)
+        {
+            return;
+        }
         this.target = character;
         if(IsTargetInRange())
         {
@@ -107,6 +132,12 @@ public class Enemy : Character
                 ChangeState(new IdleState());
             }
         }   
+    }
+    private IEnumerator WaitToSetTarget(Character targ)
+    {
+        yield return new WaitForSeconds(0.5f);
+        SetTarget(targ);
+        
     }
     public bool IsTargetInRange()
     {
@@ -139,10 +170,19 @@ public class Enemy : Character
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        
         if (collision.CompareTag("EnemyWall"))
         {
-            ChangeDirection(!isRight);
+            if(this.target == null) ChangeDirection(!isRight);
+            else
+            {
+                ChangeState(new IdleState());
+                ChangeDirection(!isRight);
+            }
         }
+        
+        
+        
     }
 
     

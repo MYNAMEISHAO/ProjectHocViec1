@@ -21,6 +21,10 @@ public class Kunai : MonoBehaviour
     {
         Destroy(gameObject);
     }
+    private void DestroyVFX(GameObject vfx)
+    {
+        Destroy(vfx);
+    }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
@@ -28,7 +32,13 @@ public class Kunai : MonoBehaviour
         {
             collision.GetComponent<Character>().OnHit(30);
             GameObject go = Instantiate(hitVFX, transform.position, transform.rotation);
+            Destroy(go, 1f);
             OnDespawn();
         }
+        if (collision.CompareTag("Ground"))
+        {
+            OnDespawn();
+        }
+
     }
 }
